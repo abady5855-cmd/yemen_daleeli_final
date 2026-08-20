@@ -1,11 +1,10 @@
-import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yemen_daleeli/features/auth/data/models/user_model.dart';
 import 'package:yemen_daleeli/features/auth/domain/entities/user_entity.dart';
 
 void main() {
   final tCreatedAt = DateTime(2023, 1, 1);
+
   final tUserModel = UserModel(
     id: '1',
     email: 'test@example.com',
@@ -30,12 +29,18 @@ void main() {
       };
 
       final result = UserModel.fromJson(jsonMap);
+
       expect(result.id, tUserModel.id);
       expect(result.email, tUserModel.email);
+      expect(result.fullName, tUserModel.fullName);
+      expect(result.createdAt, tUserModel.createdAt);
+      expect(result.role, tUserModel.role);
+      expect(result.isActive, tUserModel.isActive);
     });
 
     test('toJson should return a JSON map containing proper data', () {
       final result = tUserModel.toJson();
+
       final expectedMap = {
         'id': '1',
         'email': 'test@example.com',
@@ -51,6 +56,7 @@ void main() {
         'isActive': true,
         'governorate': null,
         'district': null,
+        'tenantId': null,
         'updatedAt': null,
         'isDeleted': false,
         'deletedAt': null,
@@ -59,6 +65,7 @@ void main() {
         'deletedBy': null,
         'version': 1,
       };
+
       expect(result, expectedMap);
     });
   });
