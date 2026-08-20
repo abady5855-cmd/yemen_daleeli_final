@@ -26,25 +26,43 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 
-subprojects {
-    project.evaluationDependsOn(':app')
-}
-
 /*
- * توحيد Java و Kotlin على JVM 17
- * لمنع تعارض JVM target مع إضافات Flutter
+ * Force Java 17 and Kotlin 17 for ALL Android subprojects,
+ * including Flutter plugins such as shared_preferences_android.
  */
-subprojects {
-    tasks.withType(JavaCompile).configureEach {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+subprojects { subproject ->
 
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-        kotlinOptions {
-            jvmTarget = '17'
+    afterEvaluate {
+
+        // Android application projects
+        if (subproject.hasProperty("android")) {
+            subproject.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
+
+        // Java compilation tasks
+        subproject.tasks.withType(JavaCompile).configureEach {
+            sourceCompatibility = JavaVersion.VERSION_17.toString()
+            targetCompatibility = JavaVersion.VERSION_17.toString()
+        }
+
+        // Kotlin compilation tasks
+        subproject.tasks.withType(
+            org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+        ).configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
         }
     }
+}
+
+subprojects {
+    project.evaluationDependsOn(':app')
 }
 
 tasks.register("clean", Delete) {
