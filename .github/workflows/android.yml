@@ -2,56 +2,108 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
   build:
+    name: Build Yemen Daleeli Android
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      # 1. تحميل المشروع
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
+      # 2. إعداد Java 17
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: temurin
           java-version: '17'
+          cache: gradle
 
+      # 3. إعداد Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.19.6'
-          channel: 'stable'
+          channel: stable
+          cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Verify Firebase Secret
+      # 4. التحقق من Firebase Secret وإنشاء google-services.json
+      - name: Create Firebase Config File
+        env:
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
-          if [ -z "${{ secrets.FIREBASE_CONFIG_JSON }}" ]; then
-            echo "Error: FIREBASE_CONFIG_JSON secret is missing. Build failed."
+          if [ -z "$FIREBASE_CONFIG_JSON" ]; then
+            echo "ERROR: FIREBASE_CONFIG_JSON secret is not configured."
             exit 1
           fi
 
-      - name: Create google-services.json from Secret
-        env:
-          FIREBASE_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
-        run: echo "$FIREBASE_JSON" > android/app/google-services.json
+          mkdir -p android/app
+          printf '%s' "$FIREBASE_CONFIG_JSON" > android/app/google-services.json
 
+          echo "Firebase configuration file created successfully."
+
+      # 5. تثبيت dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 6. فحص الكود
+      - name: Analyze code
+        run: flutter analyze
+
+      # 7. تشغيل الاختبارات
+      - name: Run tests
+        run: flutter test
+
+      # 8. تنظيف المشروع
+      - name: Flutter clean
+        run: flutter clean
+
+      # 9. إعادة تثبيت dependencies بعد التنظيف
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # 10. بناء APK Debug
       - name: Build Debug APK
         run: flutter build apk --debug --no-tree-shake-icons
 
+      # 11. بناء APK Release
       - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Build AAB
+      # 12. بناء AAB Release
+      - name: Build Release App Bundle
         run: flutter build appbundle --release --no-tree-shake-icons
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+      # 13. رفع Debug APK
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
         with:
-          name: app-artifacts
-          path: |
-            build/app/outputs/flutter-apk/app-debug.apk
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
+          name: yemen-daleeli-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      # 14. رفع Release APK
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yemen-daleeli-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
+      # 15. رفع AAB
+      - name: Upload Release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: yemen-daleeli-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+          Update Android CI workflow to artifact v4
