@@ -34,10 +34,12 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
+            shrinkResources false
         }
 
         release {
             minifyEnabled false
+            shrinkResources false
             signingConfig signingConfigs.debug
         }
     }
