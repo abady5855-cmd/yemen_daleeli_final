@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yemen_daleeli/features/auth/presentation/providers/auth_providers.dart';
+import 'package:yemen_daleeli/core/widgets/skeleton_widgets.dart';
+import 'package:yemen_daleeli/core/widgets/state_widgets.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
@@ -24,7 +26,7 @@ class ProfilePage extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _buildProfileItem(Icons.person_outline, 'الاسم الكامل', user.fullName),
+                  _buildProfileItem(Icons.person_outline, 'الاسم الكامل', user.fullName ?? 'مستخدم'),
                   _buildProfileItem(Icons.email_outlined, 'البريد الإلكتروني', user.email),
                   _buildProfileItem(Icons.phone_outlined, 'رقم الهاتف', user.phoneNumber ?? 'غير محدد'),
                   const Divider(height: 40),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:yemen_daleeli/features/services/presentation/providers/services_providers.dart';
 import 'package:yemen_daleeli/features/reviews/presentation/providers/reviews_providers.dart';
 import 'package:yemen_daleeli/core/widgets/state_widgets.dart';
+import 'package:yemen_daleeli/core/widgets/skeleton_widgets.dart';
 
 class ServiceDetailsPage extends ConsumerWidget {
   final String serviceId;

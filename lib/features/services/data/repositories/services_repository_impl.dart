@@ -1,4 +1,5 @@
 import 'package:yemen_daleeli/core/errors/failures.dart';
+import 'package:yemen_daleeli/core/models/paginated_result.dart';
 import 'package:yemen_daleeli/features/services/data/datasources/services_remote_data_source.dart';
 import 'package:yemen_daleeli/features/services/data/datasources/services_local_data_source.dart';
 import 'package:yemen_daleeli/features/services/data/models/service_model.dart';

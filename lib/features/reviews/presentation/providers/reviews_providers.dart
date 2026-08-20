@@ -50,10 +50,9 @@ class AddReviewNotifier extends StateNotifier<AsyncValue<void>> {
       serviceId: serviceId,
       userId: userId,
       userName: userName,
-      rating: rating.toInt(),
-      commentAr: comment,
+      rating: rating,
+      commentAr: comment ?? '',
       createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
     );
 
     final failure = await _repository.addReview(review);

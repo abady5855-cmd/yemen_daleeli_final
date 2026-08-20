@@ -69,7 +69,7 @@ class _AddReviewPageState extends ConsumerState<AddReviewPage> {
                         await ref.read(addReviewNotifierProvider.notifier).addReview(
                               serviceId: widget.serviceId,
                               userId: user.id,
-                              userName: user.fullName,
+                              userName: user.fullName ?? 'مستخدم',
                               rating: _rating,
                               comment: _commentController.text,
                             );

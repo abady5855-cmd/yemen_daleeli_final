@@ -9,7 +9,8 @@ class ReviewEntity extends Equatable {
   final String userName;
   final String? userProfileImageUrl;
   final double rating;
-  final String comment;
+  final String commentAr;
+  final String? commentEn;
   final List<String> imageUrls;
   final int helpfulCount;
   final DateTime createdAt;
@@ -22,7 +23,8 @@ class ReviewEntity extends Equatable {
     required this.userName,
     this.userProfileImageUrl,
     required this.rating,
-    required this.comment,
+    required this.commentAr,
+    this.commentEn,
     this.imageUrls = const [],
     this.helpfulCount = 0,
     required this.createdAt,
@@ -37,7 +39,8 @@ class ReviewEntity extends Equatable {
         userName,
         userProfileImageUrl,
         rating,
-        comment,
+        commentAr,
+        commentEn,
         imageUrls,
         helpfulCount,
         createdAt,
@@ -52,7 +55,8 @@ class ReviewEntity extends Equatable {
     String? userName,
     String? userProfileImageUrl,
     double? rating,
-    String? comment,
+    String? commentAr,
+    String? commentEn,
     List<String>? imageUrls,
     int? helpfulCount,
     DateTime? createdAt,
@@ -65,7 +69,8 @@ class ReviewEntity extends Equatable {
       userName: userName ?? this.userName,
       userProfileImageUrl: userProfileImageUrl ?? this.userProfileImageUrl,
       rating: rating ?? this.rating,
-      comment: comment ?? this.comment,
+      commentAr: commentAr ?? this.commentAr,
+      commentEn: commentEn ?? this.commentEn,
       imageUrls: imageUrls ?? this.imageUrls,
       helpfulCount: helpfulCount ?? this.helpfulCount,
       createdAt: createdAt ?? this.createdAt,
