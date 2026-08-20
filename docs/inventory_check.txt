@@ -1,0 +1,12 @@
+Features Inventory:
+- Auth: Entity, Model, RemoteDS, LocalDS(New), Repo, Providers.
+- Categories: Entity, Model, RemoteDS, LocalDS(New), Repo, Providers.
+- Services: Entity, Model, RemoteDS, LocalDS, Repo, Providers.
+- Reviews: Entity, Model, RemoteDS, Repo, Providers. (LocalDS Missing)
+- Home/Ads: Entity, Model, RemoteDS, Repo, Providers. (LocalDS Missing)
+- Locations: Entity, Model, RemoteDS, Repo, Providers. (LocalDS Missing)
+
+Missing Operations:
+- Restore (Soft Delete support exists but Restore is missing in some repos).
+- Unit Tests.
+- Advanced Mapping (Firestore Timestamp handling).
