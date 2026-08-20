@@ -13,75 +13,182 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      # --------------------------------------------------
       # 1. تحميل المشروع
+      # --------------------------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+
+      # --------------------------------------------------
       # 2. إعداد Java 17
-      - name: Set up Java
+      # --------------------------------------------------
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
           cache: gradle
 
-      # 3. إعداد Flutter
+
+      # --------------------------------------------------
+      # 3. إعداد Flutter 3.22.0
+      # --------------------------------------------------
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          flutter-version: "3.22.0"
           channel: stable
           cache: true
 
-      # 4. التحقق من Firebase Secret وإنشاء google-services.json
+
+      # --------------------------------------------------
+      # 4. التحقق من Flutter
+      # --------------------------------------------------
+      - name: Verify Flutter
+        run: |
+          flutter --version
+          dart --version
+
+
+      # --------------------------------------------------
+      # 5. إنشاء google-services.json من Secret
+      # --------------------------------------------------
       - name: Create Firebase Config File
         env:
           FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        shell: bash
         run: |
+          set -e
+
+          echo "Checking Firebase secret..."
+
           if [ -z "$FIREBASE_CONFIG_JSON" ]; then
-            echo "ERROR: FIREBASE_CONFIG_JSON secret is not configured."
+            echo "ERROR: FIREBASE_CONFIG_JSON secret is missing."
             exit 1
           fi
 
           mkdir -p android/app
+
           printf '%s' "$FIREBASE_CONFIG_JSON" > android/app/google-services.json
 
-          echo "Firebase configuration file created successfully."
+          echo "Firebase file created."
 
-      # 5. تثبيت Dependencies
+
+      # --------------------------------------------------
+      # 6. التحقق من أن Firebase JSON صالح
+      # --------------------------------------------------
+      - name: Validate Firebase JSON
+        shell: bash
+        run: |
+          set -e
+
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("android/app/google-services.json")
+
+          print("Validating google-services.json...")
+
+          try:
+              data = json.loads(
+                  path.read_text(encoding="utf-8")
+              )
+          except Exception as e:
+              print("ERROR: google-services.json is NOT valid JSON.")
+              print(f"Details: {e}")
+              raise SystemExit(1)
+
+          if not isinstance(data, dict):
+              print("ERROR: Firebase JSON root must be an object.")
+              raise SystemExit(1)
+
+          required_keys = [
+              "project_info",
+              "client"
+          ]
+
+          for key in required_keys:
+              if key not in data:
+                  print(
+                      f"ERROR: Missing required Firebase key: {key}"
+                  )
+                  raise SystemExit(1)
+
+          print("Firebase JSON validation passed.")
+          PY
+
+
+      # --------------------------------------------------
+      # 7. تثبيت Dependencies
+      # --------------------------------------------------
       - name: Install dependencies
         run: flutter pub get
 
-      # 6. فحص الكود
-      # التحذيرات والمعلومات لا توقف عملية البناء
-      - name: Analyze code
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
-      # 7. تشغيل الاختبارات
+      # --------------------------------------------------
+      # 8. تحليل المشروع
+      # --------------------------------------------------
+      - name: Analyze code
+        run: flutter analyze
+
+
+      # --------------------------------------------------
+      # 9. تشغيل الاختبارات
+      # --------------------------------------------------
       - name: Run tests
         run: flutter test
 
-      # 8. تنظيف المشروع
+
+      # --------------------------------------------------
+      # 10. تنظيف المشروع
+      # --------------------------------------------------
       - name: Flutter clean
         run: flutter clean
 
-      # 9. إعادة تثبيت Dependencies بعد التنظيف
+
+      # --------------------------------------------------
+      # 11. إعادة تثبيت Dependencies
+      # --------------------------------------------------
       - name: Flutter pub get
         run: flutter pub get
 
-      # 10. بناء Debug APK
+
+      # --------------------------------------------------
+      # 12. بناء Debug APK
+      # --------------------------------------------------
       - name: Build Debug APK
-        run: flutter build apk --debug --no-tree-shake-icons
+        run: |
+          flutter build apk \
+            --debug \
+            --no-tree-shake-icons
 
-      # 11. بناء Release APK
+
+      # --------------------------------------------------
+      # 13. بناء Release APK
+      # --------------------------------------------------
       - name: Build Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+        run: |
+          flutter build apk \
+            --release \
+            --no-tree-shake-icons
 
-      # 12. بناء Release AAB
+
+      # --------------------------------------------------
+      # 14. بناء Release AAB
+      # --------------------------------------------------
       - name: Build Release App Bundle
-        run: flutter build appbundle --release --no-tree-shake-icons
+        run: |
+          flutter build appbundle \
+            --release \
+            --no-tree-shake-icons
 
-      # 13. رفع Debug APK
+
+      # --------------------------------------------------
+      # 15. رفع Debug APK
+      # --------------------------------------------------
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -90,7 +197,10 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      # 14. رفع Release APK
+
+      # --------------------------------------------------
+      # 16. رفع Release APK
+      # --------------------------------------------------
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
@@ -99,7 +209,10 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      # 15. رفع Release AAB
+
+      # --------------------------------------------------
+      # 17. رفع AAB
+      # --------------------------------------------------
       - name: Upload Release AAB
         uses: actions/upload-artifact@v4
         with:
