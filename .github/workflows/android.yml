@@ -1,0 +1,57 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify Firebase Secret
+        run: |
+          if [ -z "${{ secrets.FIREBASE_CONFIG_JSON }}" ]; then
+            echo "Error: FIREBASE_CONFIG_JSON secret is missing. Build failed."
+            exit 1
+          fi
+
+      - name: Create google-services.json from Secret
+        env:
+          FIREBASE_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        run: echo "$FIREBASE_JSON" > android/app/google-services.json
+
+      - name: Build Debug APK
+        run: flutter build apk --debug --no-tree-shake-icons
+
+      - name: Build Release APK
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: Build AAB
+        run: flutter build appbundle --release --no-tree-shake-icons
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-artifacts
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
