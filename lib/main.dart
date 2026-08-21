@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:yemen_daleeli/core/providers/core_providers.dart';
 import 'package:yemen_daleeli/core/routing/app_router.dart';
 
@@ -11,8 +12,9 @@ Future<void> main() async {
   try {
     await Firebase.initializeApp();
     debugPrint('Firebase initialized successfully');
-  } catch (e) {
+  } catch (e, stackTrace) {
     debugPrint('Firebase initialization failed: $e');
+    debugPrintStack(stackTrace: stackTrace);
   }
 
   final sharedPreferences = await SharedPreferences.getInstance();
