@@ -2,18 +2,20 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:yemen_daleeli/core/providers/core_providers.dart';
 import 'package:yemen_daleeli/core/routing/app_router.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // تهيئة Firebase (ستحتاج لملفات google-services.json للعمل الفعلي)
-  // try {
-  //   await Firebase.initializeApp();
-  // } catch (e) {
-  //   print('Firebase initialization failed: $e');
-  // }
+
+  try {
+    await Firebase.initializeApp();
+    debugPrint('Firebase initialized successfully');
+  } catch (e, stackTrace) {
+    debugPrint('Firebase initialization failed: $e');
+    debugPrintStack(stackTrace: stackTrace);
+  }
 
   final sharedPreferences = await SharedPreferences.getInstance();
 
@@ -40,7 +42,7 @@ class YemenDaleeliApp extends ConsumerWidget {
       locale: const Locale('ar'),
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: 'Cairo', // نفترض استخدام خط القاهرة للعربية
+        fontFamily: 'Cairo',
         useMaterial3: true,
       ),
       routerConfig: router,
