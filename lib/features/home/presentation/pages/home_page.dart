@@ -1,3 +1,6 @@
+import 'dart:developer' as developer;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +14,100 @@ import 'package:yemen_daleeli/core/widgets/state_widgets.dart';
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
+  // ============================================================
+  // تشخيص الإعلانات من Firestore
+  // ============================================================
+  Future<void> debugFetchAds() async {
+    try {
+      developer.log(
+        '========== START ADS DEBUG ==========',
+        name: 'YEMEN_DALEELI',
+      );
+
+      final snap = await FirebaseFirestore.instance
+          .collection('advertisements')
+          .get();
+
+      developer.log(
+        'DEBUG ads count = ${snap.docs.length}',
+        name: 'YEMEN_DALEELI',
+      );
+
+      if (snap.docs.isEmpty) {
+        developer.log(
+          'DEBUG: لا توجد مستندات داخل advertisements',
+          name: 'YEMEN_DALEELI',
+        );
+      }
+
+      for (final doc in snap.docs) {
+        developer.log(
+          'DEBUG document ID = ${doc.id}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG document data = ${doc.data()}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        final data = doc.data();
+
+        developer.log(
+          'DEBUG id field = ${data['id']}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG title_ar = ${data['title_ar']}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG image = ${data['image']}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG isActive = ${data['isActive']}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG isDeleted = ${data['isDeleted']}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG startDate = ${data['startDate']}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG endDate = ${data['endDate']}',
+          name: 'YEMEN_DALEELI',
+        );
+
+        developer.log(
+          'DEBUG createdAt = ${data['createdAt']}',
+          name: 'YEMEN_DALEELI',
+        );
+      }
+
+      developer.log(
+        '========== END ADS DEBUG ==========',
+        name: 'YEMEN_DALEELI',
+      );
+    } catch (e, stackTrace) {
+      developer.log(
+        'DEBUG fetch ads ERROR = $e',
+        name: 'YEMEN_DALEELI',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final adsAsync = ref.watch(activeAdvertisementsProvider);
@@ -21,11 +118,39 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('يمن دليلي'),
         actions: [
+          // ==========================================================
+          // زر تشخيص مؤقت
+          // ==========================================================
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            tooltip: 'تشخيص الإعلانات',
+            onPressed: () async {
+              await debugFetchAds();
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'تم تنفيذ تشخيص الإعلانات. افتح Debug Console.',
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+
+          // ==========================================================
+          // البحث
+          // ==========================================================
           IconButton(
             icon: const Icon(Icons.search),
             tooltip: 'البحث',
             onPressed: () => context.go('/services'),
           ),
+
+          // ==========================================================
+          // تسجيل الخروج
+          // ==========================================================
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'تسجيل الخروج',
@@ -35,6 +160,7 @@ class HomePage extends ConsumerWidget {
           ),
         ],
       ),
+
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(activeAdvertisementsProvider);
@@ -45,9 +171,13 @@ class HomePage extends ConsumerWidget {
             ref.read(categoriesProvider.future),
           ]);
         },
+
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            // ==========================================================
+            // الترحيب بالمستخدم
+            // ==========================================================
             Text(
               'مرحباً، ${user?.fullName ?? 'ضيف'}',
               style: Theme.of(context).textTheme.headlineSmall,
@@ -55,10 +185,9 @@ class HomePage extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            // ============================================================
-            // قسم الإعلانات
-            // ============================================================
-
+            // ==========================================================
+            // الإعلانات
+            // ==========================================================
             const Text(
               'أبرز العروض',
               style: TextStyle(
@@ -94,17 +223,16 @@ class HomePage extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              // ------------------------------------------------
+                              // ==================================================
                               // صورة الإعلان
-                              // ------------------------------------------------
+                              // ==================================================
                               SizedBox(
-                                height: 110,
+                                height: 115,
                                 width: double.infinity,
                                 child: Image.network(
                                   ad.imageUrl,
                                   fit: BoxFit.cover,
 
-                                  // أثناء تحميل الصورة
                                   loadingBuilder:
                                       (context, child, loadingProgress) {
                                     if (loadingProgress == null) {
@@ -122,7 +250,6 @@ class HomePage extends ConsumerWidget {
                                     );
                                   },
 
-                                  // إذا فشل تحميل الصورة
                                   errorBuilder:
                                       (context, error, stackTrace) {
                                     return Container(
@@ -135,7 +262,7 @@ class HomePage extends ConsumerWidget {
                                             Icons.image_not_supported_outlined,
                                             size: 40,
                                           ),
-                                          SizedBox(height: 4),
+                                          SizedBox(height: 6),
                                           Text(
                                             'تعذر تحميل الصورة',
                                             style: TextStyle(
@@ -149,9 +276,9 @@ class HomePage extends ConsumerWidget {
                                 ),
                               ),
 
-                              // ------------------------------------------------
+                              // ==================================================
                               // عنوان الإعلان
-                              // ------------------------------------------------
+                              // ==================================================
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,
@@ -177,14 +304,14 @@ class HomePage extends ConsumerWidget {
                 );
               },
 
-              // --------------------------------------------------------------
-              // حالة التحميل
-              // --------------------------------------------------------------
+              // ==========================================================
+              // تحميل الإعلانات
+              // ==========================================================
               loading: () => const AdsSkeleton(),
 
-              // --------------------------------------------------------------
-              // حالة الخطأ
-              // --------------------------------------------------------------
+              // ==========================================================
+              // خطأ الإعلانات
+              // ==========================================================
               error: (err, _) {
                 if (err.toString().toLowerCase().contains('network')) {
                   return OfflineStateWidget(
@@ -205,10 +332,9 @@ class HomePage extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // ============================================================
-            // قسم التصنيفات
-            // ============================================================
-
+            // ==========================================================
+            // التصنيفات
+            // ==========================================================
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -219,6 +345,7 @@ class HomePage extends ConsumerWidget {
                     fontSize: 18,
                   ),
                 ),
+
                 TextButton(
                   onPressed: () => context.go('/categories'),
                   child: const Text('عرض الكل'),
@@ -239,6 +366,7 @@ class HomePage extends ConsumerWidget {
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
+
                   gridDelegate:
                       const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
@@ -246,13 +374,16 @@ class HomePage extends ConsumerWidget {
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                   ),
+
                   itemCount:
                       categories.length > 6 ? 6 : categories.length,
+
                   itemBuilder: (context, index) {
                     final category = categories[index];
 
                     return InkWell(
                       borderRadius: BorderRadius.circular(12),
+
                       onTap: () {
                         final categoryName =
                             Uri.encodeComponent(category.nameAr);
@@ -263,6 +394,7 @@ class HomePage extends ConsumerWidget {
                           '&categoryName=$categoryName',
                         );
                       },
+
                       child: Card(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -271,11 +403,13 @@ class HomePage extends ConsumerWidget {
                               Icons.category,
                               size: 32,
                             ),
+
                             const SizedBox(height: 8),
+
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+
                               child: Text(
                                 category.nameAr,
                                 textAlign: TextAlign.center,
@@ -291,14 +425,14 @@ class HomePage extends ConsumerWidget {
                 );
               },
 
-              // --------------------------------------------------------------
-              // حالة تحميل التصنيفات
-              // --------------------------------------------------------------
+              // ==========================================================
+              // تحميل التصنيفات
+              // ==========================================================
               loading: () => const CategoriesSkeleton(),
 
-              // --------------------------------------------------------------
-              // حالة خطأ التصنيفات
-              // --------------------------------------------------------------
+              // ==========================================================
+              // خطأ التصنيفات
+              // ==========================================================
               error: (err, _) {
                 if (err.toString().toLowerCase().contains('network')) {
                   return OfflineStateWidget(
@@ -322,31 +456,35 @@ class HomePage extends ConsumerWidget {
         ),
       ),
 
-      // ==============================================================
+      // ================================================================
       // شريط التنقل السفلي
-      // ==============================================================
-
+      // ================================================================
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         type: BottomNavigationBarType.fixed,
+
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'الرئيسية',
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.category),
             label: 'التصنيفات',
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'المفضلة',
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'حسابي',
           ),
         ],
+
         onTap: (index) {
           switch (index) {
             case 0:
