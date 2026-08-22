@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:yemen_daleeli/features/home/domain/entities/advertisement_entity.dart';
 
-/// نموذج الإعلان (Advertisement Model)
-/// يستخدم لتمثيل بيانات الإعلان من Firestore
+/// نموذج الإعلان
+/// مسؤول عن تحويل بيانات Firestore إلى AdvertisementEntity
 class AdvertisementModel extends AdvertisementEntity {
   const AdvertisementModel({
     required super.id,
@@ -23,32 +23,99 @@ class AdvertisementModel extends AdvertisementEntity {
   final bool isDeleted;
   final int version;
 
-  /// تحويل من JSON إلى AdvertisementModel
-  factory AdvertisementModel.fromJson(Map<String, dynamic> json) {
+  /// تحويل Timestamp / String إلى DateTime بشكل آمن
+  static DateTime _parseDate(
+    dynamic value, {
+    DateTime? fallback,
+  }) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    if (value is String && value.isNotEmpty) {
+      final parsed = DateTime.tryParse(value);
+
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+
+    return fallback ?? DateTime.now();
+  }
+
+  /// تحويل قيمة إلى String بشكل آمن
+  static String _parseString(
+    dynamic value, {
+    String fallback = '',
+  }) {
+    if (value is String && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+
+    return fallback;
+  }
+
+  /// تحويل Firestore إلى AdvertisementModel
+  factory AdvertisementModel.fromJson(
+    Map<String, dynamic> json, {
+    String? documentId,
+  }) {
+    final id = _parseString(
+      json['id'],
+      fallback: documentId ?? '',
+    );
+
+    final titleAr = _parseString(
+      json['title_ar'],
+      fallback: 'إعلان',
+    );
+
+    final imageUrl = _parseString(
+      json['image'],
+    );
+
     return AdvertisementModel(
-      id: json['id'] as String,
-      titleAr: json['title_ar'] as String,
+      id: id,
+
+      titleAr: titleAr,
+
       titleEn: json['title_en'] as String?,
+
       descriptionAr: json['description_ar'] as String?,
+
       descriptionEn: json['description_en'] as String?,
-      imageUrl: json['image'] as String,
+
+      imageUrl: imageUrl,
+
       targetUrl: json['targetUrl'] as String?,
+
       isActive: json['isActive'] as bool? ?? true,
-      startDate: json['startDate'] is Timestamp 
-          ? (json['startDate'] as Timestamp).toDate() 
-          : DateTime.parse(json['startDate'] as String),
-      endDate: json['endDate'] is Timestamp 
-          ? (json['endDate'] as Timestamp).toDate() 
-          : DateTime.parse(json['endDate'] as String),
-      createdAt: json['createdAt'] is Timestamp 
-          ? (json['createdAt'] as Timestamp).toDate() 
-          : DateTime.parse(json['createdAt'] as String),
+
+      startDate: _parseDate(
+        json['startDate'],
+      ),
+
+      endDate: _parseDate(
+        json['endDate'],
+      ),
+
+      createdAt: _parseDate(
+        json['createdAt'],
+      ),
+
       isDeleted: json['isDeleted'] as bool? ?? false,
-      version: json['version'] as int? ?? 1,
+
+      version: json['version'] is int
+          ? json['version'] as int
+          : 1,
     );
   }
 
-  /// تحويل لـ JSON الخاص بـ Firestore
+  /// تحويل إلى Firestore
   Map<String, dynamic> toFirestore() {
     return {
       'id': id,
@@ -67,7 +134,7 @@ class AdvertisementModel extends AdvertisementEntity {
     };
   }
 
-  /// تحويل لـ JSON بسيط للتخزين المحلي
+  /// تحويل إلى JSON للتخزين المحلي
   Map<String, dynamic> toJson() {
     return {
       'id': id,
