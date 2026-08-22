@@ -55,11 +55,18 @@ class HomePage extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
+            // ============================================================
             // قسم الإعلانات
+            // ============================================================
+
             const Text(
               'أبرز العروض',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
+
             const SizedBox(height: 10),
 
             adsAsync.when(
@@ -71,7 +78,7 @@ class HomePage extends ConsumerWidget {
                 }
 
                 return SizedBox(
-                  height: 150,
+                  height: 190,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: ads.length,
@@ -79,20 +86,87 @@ class HomePage extends ConsumerWidget {
                       final ad = ads[index];
 
                       return Card(
-                        child: Container(
+                        clipBehavior: Clip.antiAlias,
+                        margin: const EdgeInsets.only(right: 12),
+                        elevation: 3,
+                        child: SizedBox(
                           width: 300,
-                          padding: const EdgeInsets.all(8),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(
-                                ad.titleAr,
-                                textAlign: TextAlign.center,
+                              // ------------------------------------------------
+                              // صورة الإعلان
+                              // ------------------------------------------------
+                              SizedBox(
+                                height: 110,
+                                width: double.infinity,
+                                child: Image.network(
+                                  ad.imageUrl,
+                                  fit: BoxFit.cover,
+
+                                  // أثناء تحميل الصورة
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) {
+                                      return child;
+                                    }
+
+                                    return const Center(
+                                      child: SizedBox(
+                                        width: 28,
+                                        height: 28,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    );
+                                  },
+
+                                  // إذا فشل تحميل الصورة
+                                  errorBuilder:
+                                      (context, error, stackTrace) {
+                                    return Container(
+                                      alignment: Alignment.center,
+                                      child: const Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.image_not_supported_outlined,
+                                            size: 40,
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            'تعذر تحميل الصورة',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                              const Spacer(),
-                              const Icon(
-                                Icons.image,
-                                size: 50,
+
+                              // ------------------------------------------------
+                              // عنوان الإعلان
+                              // ------------------------------------------------
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  ad.titleAr,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -102,7 +176,15 @@ class HomePage extends ConsumerWidget {
                   ),
                 );
               },
+
+              // --------------------------------------------------------------
+              // حالة التحميل
+              // --------------------------------------------------------------
               loading: () => const AdsSkeleton(),
+
+              // --------------------------------------------------------------
+              // حالة الخطأ
+              // --------------------------------------------------------------
               error: (err, _) {
                 if (err.toString().toLowerCase().contains('network')) {
                   return OfflineStateWidget(
@@ -121,15 +203,21 @@ class HomePage extends ConsumerWidget {
               },
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
+            // ============================================================
             // قسم التصنيفات
+            // ============================================================
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'التصنيفات',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
                 TextButton(
                   onPressed: () => context.go('/categories'),
@@ -155,6 +243,8 @@ class HomePage extends ConsumerWidget {
                       const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     childAspectRatio: 1,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
                   itemCount:
                       categories.length > 6 ? 6 : categories.length,
@@ -162,6 +252,7 @@ class HomePage extends ConsumerWidget {
                     final category = categories[index];
 
                     return InkWell(
+                      borderRadius: BorderRadius.circular(12),
                       onTap: () {
                         final categoryName =
                             Uri.encodeComponent(category.nameAr);
@@ -176,11 +267,21 @@ class HomePage extends ConsumerWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.category),
+                            const Icon(
+                              Icons.category,
+                              size: 32,
+                            ),
                             const SizedBox(height: 8),
-                            Text(
-                              category.nameAr,
-                              textAlign: TextAlign.center,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Text(
+                                category.nameAr,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -189,7 +290,15 @@ class HomePage extends ConsumerWidget {
                   },
                 );
               },
+
+              // --------------------------------------------------------------
+              // حالة تحميل التصنيفات
+              // --------------------------------------------------------------
               loading: () => const CategoriesSkeleton(),
+
+              // --------------------------------------------------------------
+              // حالة خطأ التصنيفات
+              // --------------------------------------------------------------
               error: (err, _) {
                 if (err.toString().toLowerCase().contains('network')) {
                   return OfflineStateWidget(
@@ -212,6 +321,10 @@ class HomePage extends ConsumerWidget {
           ],
         ),
       ),
+
+      // ==============================================================
+      // شريط التنقل السفلي
+      // ==============================================================
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
