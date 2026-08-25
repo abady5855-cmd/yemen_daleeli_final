@@ -8,15 +8,15 @@ plugins {
 android {
     namespace "com.yemen.daleeli"
 
-    compileSdk flutter.compileSdkVersion
+    compileSdk 35
 
     ndkVersion "25.1.8937393"
 
     defaultConfig {
         applicationId "com.yemen.daleeli"
 
-        minSdk flutter.minSdkVersion
-        targetSdk flutter.targetSdkVersion
+        minSdk 24
+        targetSdk 35
 
         versionCode 1
         versionName "1.0.0"
