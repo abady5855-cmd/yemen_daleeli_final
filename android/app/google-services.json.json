@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "55100768454",
+    "project_id": "yemen-daleeli",
+    "storage_bucket": "yemen-daleeli.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:55100768454:android:9915169defcdda765d97c7",
+        "android_client_info": {
+          "package_name": "com.yemen.daleeli"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1S002uo2OlZmgA7r6mdMyq9GL5GXmM5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
