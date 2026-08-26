@@ -14,15 +14,19 @@ jobs:
 
     steps:
 
+      # 1. تحميل المشروع
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. إعداد Java 17
+      # بدون Gradle cache لتجنب استخدام cache تالف
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
+      # 3. إعداد Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -30,6 +34,7 @@ jobs:
           channel: stable
           cache: true
 
+      # 4. التحقق من Firebase Secret
       - name: Verify Firebase Secret
         env:
           FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
@@ -38,69 +43,76 @@ jobs:
             echo "ERROR: FIREBASE_CONFIG_JSON secret is missing."
             exit 1
           fi
+
           echo "Firebase secret exists."
 
+      # 5. إنشاء google-services.json
       - name: Create Firebase Config File
         env:
           FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
           mkdir -p android/app
+
           printf '%s' "$FIREBASE_CONFIG_JSON" > android/app/google-services.json
+
           echo "Checking Firebase JSON..."
+
           python3 - <<'PY'
           import json
+
           path = "android/app/google-services.json"
+
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
+
           assert "project_info" in data
           assert "client" in data
+
           print("Firebase JSON is valid.")
           print("Project ID:", data["project_info"]["project_id"])
           PY
 
+      # 6. تثبيت Dependencies
       - name: Install dependencies
         run: flutter pub get
 
+      # 7. تحليل المشروع
       - name: Analyze code
         run: |
           flutter analyze --no-fatal-infos --no-fatal-warnings || true
 
+      # 8. الاختبارات
       - name: Run tests
         run: flutter test
 
+      # 9. تنظيف Flutter
       - name: Flutter clean
         run: flutter clean
 
+      # 10. إعادة تثبيت Dependencies
       - name: Flutter pub get after clean
         run: flutter pub get
 
-      # === التغيير الجذري هنا ===
-      - name: Force clean Gradle caches with sudo
+      # 11. تنظيف Gradle cache في بيئة GitHub Actions
+      - name: Reset Gradle caches
         run: |
-          sudo rm -rf ~/.gradle/caches
-          sudo rm -rf ~/.gradle/daemon
-          echo "All Gradle caches removed."
+          rm -rf "$HOME/.gradle/caches"
+          rm -rf "$HOME/.gradle/daemon"
+          echo "Gradle caches reset successfully."
 
-      - name: Verify build environment
-        run: |
-          java -version
-          flutter --version
-          cd android
-          ./gradlew --version
-
-      # بناء مع خيارات إضافية لتجنب مشاكل Jar
+      # 12. بناء Debug APK
       - name: Build Debug APK
-        run: |
-          flutter build apk --debug --no-tree-shake-icons --no-daemon --no-build-cache
+        run: flutter build apk --debug --no-tree-shake-icons
 
+      # 13. بناء Release APK
       - name: Build Release APK
-        run: |
-          flutter build apk --release --no-tree-shake-icons --no-daemon --no-build-cache
+        run: flutter build apk --release --no-tree-shake-icons
 
+      # 14. بناء Release App Bundle
       - name: Build Release App Bundle
-        run: |
-          flutter build appbundle --release --no-tree-shake-icons --no-daemon --no-build-cache
+        run: flutter build appbundle --release --no-tree-shake-icons
 
+      # 15. رفع Debug APK
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -109,6 +121,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      # 16. رفع Release APK
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
@@ -117,6 +130,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      # 17. رفع Release AAB
       - name: Upload Release AAB
         uses: actions/upload-artifact@v4
         with:
