@@ -46,31 +46,60 @@ jobs:
         run: |
           mkdir -p android/app
           printf '%s' "$FIREBASE_CONFIG_JSON" > android/app/google-services.json
-          echo "Firebase JSON created successfully."
+          echo "Checking Firebase JSON..."
+          python3 - <<'PY'
+          import json
+          path = "android/app/google-services.json"
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+          assert "project_info" in data
+          assert "client" in data
+          print("Firebase JSON is valid.")
+          print("Project ID:", data["project_info"]["project_id"])
+          PY
 
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Analyze code
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings || true
+
+      - name: Run tests
+        run: flutter test
+
       - name: Flutter clean
         run: flutter clean
 
-      - name: Reinstall dependencies after clean
+      - name: Flutter pub get after clean
         run: flutter pub get
 
-      - name: Reset Gradle caches
+      # === التغيير الجذري هنا ===
+      - name: Force clean Gradle caches with sudo
         run: |
-          rm -rf ~/.gradle/caches
-          rm -rf ~/.gradle/daemon
-          echo "Gradle caches reset successfully."
+          sudo rm -rf ~/.gradle/caches
+          sudo rm -rf ~/.gradle/daemon
+          echo "All Gradle caches removed."
 
+      - name: Verify build environment
+        run: |
+          java -version
+          flutter --version
+          cd android
+          ./gradlew --version
+
+      # بناء مع خيارات إضافية لتجنب مشاكل Jar
       - name: Build Debug APK
-        run: flutter build apk --debug --no-tree-shake-icons
+        run: |
+          flutter build apk --debug --no-tree-shake-icons --no-daemon --no-build-cache
 
       - name: Build Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+        run: |
+          flutter build apk --release --no-tree-shake-icons --no-daemon --no-build-cache
 
       - name: Build Release App Bundle
-        run: flutter build appbundle --release --no-tree-shake-icons
+        run: |
+          flutter build appbundle --release --no-tree-shake-icons --no-daemon --no-build-cache
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
